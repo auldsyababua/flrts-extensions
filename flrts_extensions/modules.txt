@@ -1,1 +1,3 @@
-FLRTS Extensions
+# Frappe modules list
+# Add functional module names here when DocTypes are defined
+# Do NOT include the app name itself
