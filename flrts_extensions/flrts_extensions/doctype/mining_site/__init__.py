@@ -1,0 +1,1 @@
+# Mining Site DocType

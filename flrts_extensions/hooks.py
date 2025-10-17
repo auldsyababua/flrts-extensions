@@ -20,6 +20,28 @@ doc_events = {
     }
 }
 
+# Fixtures - Custom fields to be installed on bench migrate
+fixtures = [
+    {
+        "doctype": "Custom Field",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+                    "Maintenance Visit-supabase_task_id",
+                    "Maintenance Visit-flrts_owner",
+                    "Maintenance Visit-flrts_priority",
+                    "Maintenance Visit-flrts_site",
+                    "Maintenance Visit-flrts_contractor",
+                    "Maintenance Visit-flrts_metadata",
+                    "Maintenance Visit-custom_synced_at"
+                ]
+            ]
+        ]
+    }
+]
+
 # Scheduled jobs (DEFERRED TO PHASE 2)
 # scheduler_events = {
 #     "daily": [
