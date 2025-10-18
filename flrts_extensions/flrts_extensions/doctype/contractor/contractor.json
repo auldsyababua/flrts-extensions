@@ -1,8 +1,16 @@
 {
-  "name": "Contractor",
-  "module": "FLRTS Extensions",
+  "creation": "2025-10-18 00:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
+  "field_order": [
+    "contractor_name",
+    "contractor_type",
+    "contact_email",
+    "contact_phone",
+    "is_active"
+  ],
+  "module": "FLRTS Extensions",
+  "name": "Contractor",
   "is_submittable": 0,
   "autoname": "field:contractor_name",
   "fields": [
