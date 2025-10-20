@@ -1,6 +1,5 @@
 [
   {
-    "doctype": "Custom Field",
     "name": "Maintenance Visit-supabase_task_id",
     "dt": "Maintenance Visit",
     "fieldname": "supabase_task_id",
@@ -14,7 +13,6 @@
     "description": "Original Supabase task UUID (for future reconciliation and audit)"
   },
   {
-    "doctype": "Custom Field",
     "name": "Maintenance Visit-flrts_owner",
     "dt": "Maintenance Visit",
     "fieldname": "flrts_owner",
@@ -27,7 +25,6 @@
     "description": "Internal task owner (FLRTS personnel who owns this task)"
   },
   {
-    "doctype": "Custom Field",
     "name": "Maintenance Visit-flrts_priority",
     "dt": "Maintenance Visit",
     "fieldname": "flrts_priority",
@@ -41,7 +38,6 @@
     "description": "Task priority (1=Urgent, 2=High, 3=Normal, 4=Low, 5=Lowest)"
   },
   {
-    "doctype": "Custom Field",
     "name": "Maintenance Visit-flrts_site",
     "dt": "Maintenance Visit",
     "fieldname": "flrts_site",
@@ -54,7 +50,6 @@
     "description": "Mining site where maintenance was performed"
   },
   {
-    "doctype": "Custom Field",
     "name": "Maintenance Visit-flrts_contractor",
     "dt": "Maintenance Visit",
     "fieldname": "flrts_contractor",
@@ -67,7 +62,6 @@
     "description": "Contractor responsible for maintenance work"
   },
   {
-    "doctype": "Custom Field",
     "name": "Maintenance Visit-flrts_metadata",
     "dt": "Maintenance Visit",
     "fieldname": "flrts_metadata",
@@ -80,7 +74,6 @@
     "description": "Custom metadata in JSON format (for integrations and extensions)"
   },
   {
-    "doctype": "Custom Field",
     "name": "Maintenance Visit-custom_synced_at",
     "dt": "Maintenance Visit",
     "fieldname": "custom_synced_at",
