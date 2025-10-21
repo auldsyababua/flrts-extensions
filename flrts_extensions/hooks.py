@@ -35,7 +35,14 @@ fixtures = [
                     "Maintenance Visit-flrts_site",
                     "Maintenance Visit-flrts_contractor",
                     "Maintenance Visit-flrts_metadata",
-                    "Maintenance Visit-custom_synced_at"
+                    "Maintenance Visit-custom_synced_at",
+                    "Maintenance Visit-custom_assigned_to",
+                    "Maintenance Visit-custom_flrts_priority",
+                    "Maintenance Visit-custom_parse_rationale",
+                    "Maintenance Visit-custom_parse_confidence",
+                    "Maintenance Visit-custom_telegram_message_id",
+                    "Maintenance Visit-custom_flrts_source",
+                    "Maintenance Visit-custom_flagged_for_review"
                 ]
             ]
         ]

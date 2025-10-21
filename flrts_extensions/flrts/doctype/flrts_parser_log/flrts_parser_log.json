@@ -1,0 +1,265 @@
+{
+  "name": "FLRTS Parser Log",
+  "doctype": "DocType",
+  "module": "FLRTS",
+  "is_submittable": 0,
+  "is_tree": 0,
+  "track_changes": 1,
+  "autoname": "format:FLRTS-LOG-{YYYY}-{#####}",
+  "fields": [
+    {
+      "fieldname": "telegram_message_id",
+      "fieldtype": "Data",
+      "label": "Telegram Message ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "telegram_user_id",
+      "fieldtype": "Data",
+      "label": "Telegram User ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "telegram_chat_id",
+      "fieldtype": "Data",
+      "label": "Telegram Chat ID",
+      "reqd": 1,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "original_message",
+      "fieldtype": "Long Text",
+      "label": "Original Message",
+      "reqd": 1,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "user_timezone",
+      "fieldtype": "Data",
+      "label": "User Timezone",
+      "length": 50,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "openai_request_id",
+      "fieldtype": "Data",
+      "label": "OpenAI Request ID",
+      "length": 100,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "model_name",
+      "fieldtype": "Data",
+      "label": "Model Name",
+      "reqd": 1,
+      "length": 50,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "prompt_version",
+      "fieldtype": "Data",
+      "label": "Prompt Version",
+      "reqd": 1,
+      "length": 50,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "system_prompt",
+      "fieldtype": "Long Text",
+      "label": "System Prompt",
+      "reqd": 1,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "user_message",
+      "fieldtype": "Long Text",
+      "label": "User Message",
+      "reqd": 1,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "request_timestamp",
+      "fieldtype": "Datetime",
+      "label": "Request Timestamp",
+      "reqd": 1,
+      "default": "Now",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "response_timestamp",
+      "fieldtype": "Datetime",
+      "label": "Response Timestamp",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "response_duration_ms",
+      "fieldtype": "Int",
+      "label": "Response Duration (ms)",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "erpnext_response_ms",
+      "fieldtype": "Int",
+      "label": "ERPNext Response Duration (ms)",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "finish_reason",
+      "fieldtype": "Data",
+      "label": "Finish Reason",
+      "length": 50,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "parsed_output",
+      "fieldtype": "JSON",
+      "label": "Parsed Output",
+      "reqd": 1,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "model_rationale",
+      "fieldtype": "Long Text",
+      "label": "Model Rationale",
+      "reqd": 1,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "confidence_score",
+      "fieldtype": "Float",
+      "label": "Confidence Score",
+      "precision": 2,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "prompt_tokens",
+      "fieldtype": "Int",
+      "label": "Prompt Tokens",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "completion_tokens",
+      "fieldtype": "Int",
+      "label": "Completion Tokens",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "total_tokens",
+      "fieldtype": "Int",
+      "label": "Total Tokens",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "estimated_cost_usd",
+      "fieldtype": "Currency",
+      "label": "Estimated Cost (USD)",
+      "precision": 6,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "error_occurred",
+      "fieldtype": "Check",
+      "label": "Error Occurred",
+      "default": 0,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "error_type",
+      "fieldtype": "Data",
+      "label": "Error Type",
+      "length": 100,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "error_message",
+      "fieldtype": "Long Text",
+      "label": "Error Message",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "error_code",
+      "fieldtype": "Data",
+      "label": "Error Code",
+      "length": 50,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "is_correction",
+      "fieldtype": "Check",
+      "label": "Is Correction",
+      "default": 0,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "original_log_id",
+      "fieldtype": "Link",
+      "label": "Original Log ID",
+      "options": "FLRTS Parser Log",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "correction_user_feedback",
+      "fieldtype": "Long Text",
+      "label": "Correction User Feedback",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "correction_rationale",
+      "fieldtype": "Long Text",
+      "label": "Correction Rationale",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "correction_attempt_number",
+      "fieldtype": "Int",
+      "label": "Correction Attempt Number",
+      "default": 1,
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "user_accepted",
+      "fieldtype": "Select",
+      "label": "User Accepted",
+      "options": "Pending\nAccepted\nRejected",
+      "default": "Pending",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "user_response_timestamp",
+      "fieldtype": "Datetime",
+      "label": "User Response Timestamp",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "user_feedback",
+      "fieldtype": "Long Text",
+      "label": "User Feedback",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "created_task_id",
+      "fieldtype": "Link",
+      "label": "Created Task ID",
+      "options": "Maintenance Visit",
+      "in_list_view": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "FLRTS User",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    }
+  ]
+}

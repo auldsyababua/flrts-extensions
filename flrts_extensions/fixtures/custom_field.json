@@ -84,5 +84,88 @@
     "read_only": 1,
     "in_list_view": 0,
     "description": "Timestamp of last sync from Supabase (migration artifact)"
+  },
+  {
+    "name": "Maintenance Visit-custom_assigned_to",
+    "dt": "Maintenance Visit",
+    "fieldname": "custom_assigned_to",
+    "fieldtype": "Link",
+    "options": "User",
+    "label": "Assigned To",
+    "insert_after": "custom_synced_at",
+    "reqd": 0,
+    "in_list_view": 1,
+    "description": "User assigned to this maintenance visit"
+  },
+  {
+    "name": "Maintenance Visit-custom_flrts_priority",
+    "dt": "Maintenance Visit",
+    "fieldname": "custom_flrts_priority",
+    "fieldtype": "Select",
+    "options": "Low\nMedium\nHigh\nUrgent",
+    "label": "FLRTS Priority",
+    "insert_after": "custom_assigned_to",
+    "default": "Medium",
+    "reqd": 0,
+    "in_list_view": 1,
+    "description": "Priority level for FLRTS tasks (Low/Medium/High/Urgent)"
+  },
+  {
+    "name": "Maintenance Visit-custom_parse_rationale",
+    "dt": "Maintenance Visit",
+    "fieldname": "custom_parse_rationale",
+    "fieldtype": "Long Text",
+    "label": "Parse Rationale",
+    "insert_after": "custom_flrts_priority",
+    "reqd": 0,
+    "in_list_view": 0,
+    "description": "AI parser's reasoning for field assignments"
+  },
+  {
+    "name": "Maintenance Visit-custom_parse_confidence",
+    "dt": "Maintenance Visit",
+    "fieldname": "custom_parse_confidence",
+    "fieldtype": "Float",
+    "label": "Parse Confidence",
+    "insert_after": "custom_parse_rationale",
+    "precision": 2,
+    "reqd": 0,
+    "in_list_view": 0,
+    "description": "Confidence score from AI parser (0.0-1.0)"
+  },
+  {
+    "name": "Maintenance Visit-custom_telegram_message_id",
+    "dt": "Maintenance Visit",
+    "fieldname": "custom_telegram_message_id",
+    "fieldtype": "Data",
+    "label": "Telegram Message ID",
+    "insert_after": "custom_parse_confidence",
+    "reqd": 0,
+    "in_list_view": 0,
+    "description": "Original Telegram message ID that created this task"
+  },
+  {
+    "name": "Maintenance Visit-custom_flrts_source",
+    "dt": "Maintenance Visit",
+    "fieldname": "custom_flrts_source",
+    "fieldtype": "Data",
+    "label": "FLRTS Source",
+    "insert_after": "custom_telegram_message_id",
+    "default": "telegram_bot",
+    "reqd": 0,
+    "in_list_view": 0,
+    "description": "Source system that created this task"
+  },
+  {
+    "name": "Maintenance Visit-custom_flagged_for_review",
+    "dt": "Maintenance Visit",
+    "fieldname": "custom_flagged_for_review",
+    "fieldtype": "Check",
+    "label": "Flagged for Review",
+    "insert_after": "custom_flrts_source",
+    "default": 0,
+    "reqd": 0,
+    "in_list_view": 1,
+    "description": "Flag tasks that need manual review"
   }
 ]

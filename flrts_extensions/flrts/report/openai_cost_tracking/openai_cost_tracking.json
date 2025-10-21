@@ -1,0 +1,10 @@
+{
+  "name": "OpenAI Cost Tracking",
+  "doctype": "Report",
+  "module": "FLRTS",
+  "report_name": "OpenAI Cost Tracking",
+  "report_type": "Script Report",
+  "ref_doctype": "FLRTS Parser Log",
+  "is_standard": "Yes",
+  "disabled": 0
+}

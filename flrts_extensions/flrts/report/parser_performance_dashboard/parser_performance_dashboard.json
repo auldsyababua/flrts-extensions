@@ -1,0 +1,10 @@
+{
+    "name": "Parser Performance Dashboard",
+    "doctype": "Report",
+    "module": "FLRTS",
+    "report_name": "Parser Performance Dashboard",
+    "report_type": "Script Report",
+    "is_standard": "Yes",
+    "ref_doctype": "FLRTS Parser Log",
+    "disabled": 0
+}
