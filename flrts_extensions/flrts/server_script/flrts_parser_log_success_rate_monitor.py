@@ -1,5 +1,5 @@
 import frappe
-from frappe.utils import add_days, get_url, now
+from frappe.utils import add_to_date, get_url, now_datetime
 
 
 def execute():
@@ -31,10 +31,12 @@ def execute():
             )
             threshold = 80.0
 
-        # Get logs from last 24 hours
-        yesterday = add_days(now(), -1)
+        # Get logs from last 24 hours (precise)
+        twenty_four_hours_ago = add_to_date(now_datetime(), hours=-24)
         logs = frappe.db.get_all(
-            "FLRTS Parser Log", filters={"creation": [">=", yesterday]}, fields=["user_accepted"]
+            "FLRTS Parser Log",
+            filters={"creation": [">=", twenty_four_hours_ago]},
+            fields=["user_accepted"],
         )
 
         total_parses = len(logs)
@@ -68,7 +70,7 @@ Last 24 Hours:
 
 Links:
 - FLRTS Parser Log: {get_url("/app/flrts-parser-log")}
-- Parser Performance Report: {get_url("/app/query-report/parser-performance-dashboard")}
+- Parser Performance Report: {get_url("/app/query-report/Parser Performance Dashboard")}
 
 Suggested Actions:
 1. Review failed parses in the Parser Log
