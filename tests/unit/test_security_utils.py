@@ -1,6 +1,5 @@
 """Unit tests for security utilities."""
 
-
 from flrts_extensions.utils.security import mask_secret
 
 

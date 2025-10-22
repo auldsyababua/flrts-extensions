@@ -1,7 +1,6 @@
 """Unit tests for cost calculation logic in FLRTS Parser Log."""
 
 
-
 def test_basic_cost_calculation(mock_frappe):
     """Test basic cost calculation for OpenAI API usage."""
     # GPT-4 Turbo pricing: $0.01/1K prompt tokens, $0.03/1K completion tokens
