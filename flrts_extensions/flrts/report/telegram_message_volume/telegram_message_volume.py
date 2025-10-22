@@ -5,7 +5,7 @@ from frappe import _
 from frappe.query_builder import DocType
 from frappe.query_builder.functions import Avg, Count, Sum
 from pypika import CustomFunction
-from pypika.terms import Case
+from pypika.terms import Case, Distinct
 
 
 def execute(filters=None):
@@ -119,7 +119,6 @@ def get_data(filters):
     DATE = CustomFunction("DATE", ["date_field"])
     HOUR = CustomFunction("HOUR", ["date_field"])
     ROUND = CustomFunction("ROUND", ["value", "decimals"])
-    COUNT_DISTINCT = CustomFunction("COUNT", ["DISTINCT", "field"])
 
     # Define CASE expression for errors
     error_case = Case().when(ParserLog.error_occurred == 1, 1).else_(0)
@@ -132,7 +131,7 @@ def get_data(filters):
                 .select(
                     DATE(ParserLog.creation).as_("date"),
                     Count("*").as_("total_messages"),
-                    COUNT_DISTINCT("DISTINCT", ParserLog.telegram_user_id).as_("unique_users"),
+                    Count(Distinct(ParserLog.telegram_user_id)).as_("unique_users"),
                     Count(ParserLog.created_task_id).as_("tasks_created"),
                     Sum(error_case).as_("errors"),
                     ROUND(Avg(ParserLog.confidence_score), 2).as_("avg_confidence"),
@@ -156,7 +155,7 @@ def get_data(filters):
                 .select(
                     HOUR(ParserLog.creation).as_("hour"),
                     Count("*").as_("total_messages"),
-                    COUNT_DISTINCT("DISTINCT", ParserLog.telegram_user_id).as_("unique_users"),
+                    Count(Distinct(ParserLog.telegram_user_id)).as_("unique_users"),
                     Count(ParserLog.created_task_id).as_("tasks_created"),
                     Sum(error_case).as_("errors"),
                 )

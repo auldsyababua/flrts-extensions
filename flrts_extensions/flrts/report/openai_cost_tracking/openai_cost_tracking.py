@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from frappe.query_builder import DocType
-from frappe.query_builder.functions import Count, Sum
+from frappe.query_builder.functions import Count, Min, Sum
 from frappe.utils import get_last_day, getdate
 from pypika import CustomFunction
 
@@ -95,10 +95,17 @@ def get_data(filters):
     ROUND = CustomFunction("ROUND", ["value", "decimals"])
 
     # Build base query
+    # Use aggregated date when grouping by model to satisfy ONLY_FULL_GROUP_BY
+    date_expr = (
+        Min(DATE(ParserLog.creation)).as_("date")
+        if group_by == "Model Name"
+        else DATE(ParserLog.creation).as_("date")
+    )
+
     query = (
         frappe.qb.from_(ParserLog)
         .select(
-            DATE(ParserLog.creation).as_("date"),
+            date_expr,
             Count("*").as_("total_requests"),
             Sum(ParserLog.total_tokens).as_("total_tokens"),
             Sum(ParserLog.prompt_tokens).as_("prompt_tokens"),
@@ -124,8 +131,11 @@ def get_data(filters):
         else:
             query = query.groupby(DATE(ParserLog.creation))
 
-    # Order by date descending
-    query = query.orderby(DATE(ParserLog.creation), order=frappe.qb.desc)
+    # Order by
+    if group_by == "Model Name":
+        query = query.orderby(ParserLog.model_name)
+    else:
+        query = query.orderby(DATE(ParserLog.creation), order=frappe.qb.desc)
 
     # Execute query
     data = query.run(as_dict=True)
@@ -184,8 +194,10 @@ def get_chart_data(data, filters):
     if not data:
         return None
 
-    dates = [str(row.date) for row in data]
-    costs = [row.total_cost for row in data]
+    # Exclude summary row from chart
+    rows = [r for r in data if str(r.get("date")) != "Total"]
+    dates = [str(r.get("date")) for r in rows]
+    costs = [r.get("total_cost", 0) for r in rows]
     colors = ["#28a745" if cost < 10 else "#dc3545" for cost in costs]
 
     return {
