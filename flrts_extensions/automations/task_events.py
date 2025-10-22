@@ -13,7 +13,7 @@ except ImportError:
     frappe = None
     Retry = None
 
-from flrts_extensions.utils.logging import log_debug, log_info, log_error
+from flrts_extensions.utils.logging import log_debug, log_error, log_info
 
 
 def validate_task_dependencies(doc, method):
@@ -43,7 +43,9 @@ def validate_task_dependencies(doc, method):
 
         # Validation: Completed tasks must have completed_by set
         if doc.status == "Completed" and not doc.get("completed_by"):
-            frappe.throw("Completed tasks must have 'Completed By' field set", frappe.ValidationError)
+            frappe.throw(
+                "Completed tasks must have 'Completed By' field set", frappe.ValidationError
+            )
 
         log_debug(f"Task {doc.name} validation passed")
 
@@ -83,7 +85,7 @@ def handle_task_update(doc, method):
                 doc_name=doc.name,
                 queue="short",
                 retry=retry_config,
-                timeout=60
+                timeout=60,
             )
 
             log_info(f"Enqueued sync job for completed Task {doc.name}")
@@ -92,7 +94,7 @@ def handle_task_update(doc, method):
         # Log error but DON'T re-raise (allow save to succeed)
         log_error(
             f"Failed to enqueue sync job for Task {doc.name}: {str(e)}",
-            title="Task Update Hook Failed"
+            title="Task Update Hook Failed",
         )
 
 
@@ -117,7 +119,7 @@ def sync_completed_task(doc_name):
 
     try:
         # Fetch document in background context
-        doc = frappe.get_doc("Task", doc_name)
+        frappe.get_doc("Task", doc_name)
 
         log_info(f"Syncing completed Task {doc_name} to external system (STUB)")
 
@@ -135,8 +137,5 @@ def sync_completed_task(doc_name):
         return {"success": True, "message": "Sync completed (stub)"}
 
     except Exception as e:
-        log_error(
-            f"Failed to sync Task {doc_name}: {str(e)}",
-            title="Task Sync Failed"
-        )
+        log_error(f"Failed to sync Task {doc_name}: {str(e)}", title="Task Sync Failed")
         return {"success": False, "error": str(e)}

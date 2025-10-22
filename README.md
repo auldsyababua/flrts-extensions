@@ -1,5 +1,9 @@
 # FLRTS Extensions
 
+[![PR Core Checks](https://github.com/auldsyababua/flrts-extensions/actions/workflows/pr-core.yml/badge.svg)](https://github.com/auldsyababua/flrts-extensions/actions/workflows/pr-core.yml)
+[![QA Gate](https://github.com/auldsyababua/flrts-extensions/actions/workflows/qa-gate.yml/badge.svg)](https://github.com/auldsyababua/flrts-extensions/actions/workflows/qa-gate.yml)
+[![Security Scan](https://github.com/auldsyababua/flrts-extensions/actions/workflows/security.yml/badge.svg)](https://github.com/auldsyababua/flrts-extensions/actions/workflows/security.yml)
+
 Custom Field Service Management extensions for BigSir FLRTS on ERPNext.
 
 ## Overview
@@ -108,23 +112,70 @@ flrts_extensions/
 
 ## Development
 
+For detailed development guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Quick Start
+
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements-dev.txt
+   ```
+
+2. **Install pre-commit hooks:**
+   ```bash
+   ./scripts/install-hooks.sh
+   ```
+
+3. **Run tests:**
+   ```bash
+   pytest
+   ```
+
+4. **Run linting:**
+   ```bash
+   ruff check .
+   ruff format .
+   ```
+
+### Code Quality Standards
+
+- **Linter/Formatter:** Ruff v0.4.x-0.5.x (replaces Black + Flake8 + Pylint)
+- **Line Length:** 100 characters
+- **Test Coverage:** ≥10% (initial), target ≥60%
+- **Testing:** pytest with unit and integration tests
+- **Pre-commit Hooks:** Auto-format and lint on commit
+- **CI/CD:** GitHub Actions workflows for PR checks, QA gate, and security scans
+
 ### Running Tests
 
 ```bash
-cd flrts_extensions/
-pytest tests/ -v
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov-report=html
+
+# Run only unit tests
+pytest tests/unit/
+
+# Skip integration tests (no ERPNext)
+pytest -m "not integration"
 ```
 
 ### Linting
 
 ```bash
-ruff check flrts_extensions/
-```
+# Check code quality
+ruff check .
 
-### Type Checking
+# Auto-fix issues
+ruff check --fix .
 
-```bash
-mypy flrts_extensions/ --ignore-missing-imports
+# Check formatting
+ruff format --check .
+
+# Apply formatting
+ruff format .
 ```
 
 ## Monitoring

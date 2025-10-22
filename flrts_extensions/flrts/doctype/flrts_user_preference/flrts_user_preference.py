@@ -1,7 +1,9 @@
+from datetime import datetime
+from zoneinfo import available_timezones
+
 import frappe
 from frappe.model.document import Document
-from zoneinfo import available_timezones
-from datetime import datetime
+
 
 class FLRTSUserPreference(Document):
     def validate(self):
@@ -9,18 +11,20 @@ class FLRTSUserPreference(Document):
         if self.telegram_user_id:
             existing = frappe.db.exists(
                 "FLRTS User Preference",
-                {"telegram_user_id": self.telegram_user_id, "name": ["!=", self.name]}
+                {"telegram_user_id": self.telegram_user_id, "name": ["!=", self.name]},
             )
             if existing:
-                frappe.throw(f"Telegram user ID {self.telegram_user_id} is already linked to another user")
-        
+                frappe.throw(
+                    f"Telegram user ID {self.telegram_user_id} is already linked to another user"
+                )
+
         # Validate quiet hours
         if self.notification_quiet_hours_start and self.notification_quiet_hours_end:
             start = datetime.strptime(self.notification_quiet_hours_start, "%H:%M:%S")
             end = datetime.strptime(self.notification_quiet_hours_end, "%H:%M:%S")
             if end <= start:
                 frappe.throw("Quiet hours end time must be after start time")
-        
+
         # Validate timezone
         if self.timezone:
             if self.timezone not in available_timezones():

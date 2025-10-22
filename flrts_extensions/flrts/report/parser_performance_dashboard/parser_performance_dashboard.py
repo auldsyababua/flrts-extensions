@@ -1,183 +1,176 @@
 import frappe
 from frappe import _
-from frappe.utils import getdate, add_days, now_datetime
-import datetime
+from frappe.query_builder import DocType
+from frappe.query_builder.functions import Avg, Count, Sum
+from frappe.utils import add_days, getdate
+from pypika import CustomFunction
+from pypika.terms import Case
+
 
 def execute(filters=None):
-	columns = get_columns()
-	data = get_data(filters)
-	chart = get_chart_data(data)
-	return columns, data, None, chart
+    columns = get_columns()
+    data = get_data(filters)
+    chart = get_chart_data(data)
+    return columns, data, None, chart
+
 
 def get_columns():
-	return [
-		{
-			"fieldname": "date",
-			"label": _("Date"),
-			"fieldtype": "Date",
-			"width": 100
-		},
-		{
-			"fieldname": "total_parses",
-			"label": _("Total Parses"),
-			"fieldtype": "Int",
-			"width": 120
-		},
-		{
-			"fieldname": "accepted",
-			"label": _("Accepted"),
-			"fieldtype": "Int",
-			"width": 100
-		},
-		{
-			"fieldname": "rejected",
-			"label": _("Rejected"),
-			"fieldtype": "Int",
-			"width": 100
-		},
-		{
-			"fieldname": "pending",
-			"label": _("Pending"),
-			"fieldtype": "Int",
-			"width": 100
-		},
-		{
-			"fieldname": "success_rate",
-			"label": _("Success Rate (%)"),
-			"fieldtype": "Percent",
-			"width": 130
-		},
-		{
-			"fieldname": "avg_confidence",
-			"label": _("Avg Confidence"),
-			"fieldtype": "Float",
-			"width": 120
-		},
-		{
-			"fieldname": "avg_response_ms",
-			"label": _("Avg Response (ms)"),
-			"fieldtype": "Int",
-			"width": 140
-		},
-		{
-			"fieldname": "avg_erpnext_response_ms",
-			"label": _("Avg ERPNext API (ms)"),
-			"fieldtype": "Int",
-			"width": 150
-		},
-		{
-			"fieldname": "total_cost",
-			"label": _("Total Cost ($)"),
-			"fieldtype": "Currency",
-			"width": 120
-		},
-		{
-			"fieldname": "avg_cost_per_parse",
-			"label": _("Avg Cost per Parse ($)"),
-			"fieldtype": "Currency",
-			"width": 160
-		}
-	]
+    return [
+        {"fieldname": "date", "label": _("Date"), "fieldtype": "Date", "width": 100},
+        {"fieldname": "total_parses", "label": _("Total Parses"), "fieldtype": "Int", "width": 120},
+        {"fieldname": "accepted", "label": _("Accepted"), "fieldtype": "Int", "width": 100},
+        {"fieldname": "rejected", "label": _("Rejected"), "fieldtype": "Int", "width": 100},
+        {"fieldname": "pending", "label": _("Pending"), "fieldtype": "Int", "width": 100},
+        {
+            "fieldname": "success_rate",
+            "label": _("Success Rate (%)"),
+            "fieldtype": "Percent",
+            "width": 130,
+        },
+        {
+            "fieldname": "avg_confidence",
+            "label": _("Avg Confidence"),
+            "fieldtype": "Float",
+            "width": 120,
+        },
+        {
+            "fieldname": "avg_response_ms",
+            "label": _("Avg Response (ms)"),
+            "fieldtype": "Int",
+            "width": 140,
+        },
+        {
+            "fieldname": "avg_erpnext_response_ms",
+            "label": _("Avg ERPNext API (ms)"),
+            "fieldtype": "Int",
+            "width": 150,
+        },
+        {
+            "fieldname": "total_cost",
+            "label": _("Total Cost ($)"),
+            "fieldtype": "Currency",
+            "width": 120,
+        },
+        {
+            "fieldname": "avg_cost_per_parse",
+            "label": _("Avg Cost per Parse ($)"),
+            "fieldtype": "Currency",
+            "width": 160,
+        },
+    ]
+
 
 def get_data(filters):
-	if not filters:
-		filters = {}
+    if not filters:
+        filters = {}
 
-	# Server-side filter defaults
-	from_date = filters.get('from_date')
-	to_date = filters.get('to_date')
-	telegram_user_id = filters.get('telegram_user_id')
-	model_name = filters.get('model_name')
+    # Server-side filter defaults
+    from_date = filters.get("from_date")
+    to_date = filters.get("to_date")
+    telegram_user_id = filters.get("telegram_user_id")
+    model_name = filters.get("model_name")
 
-	if not from_date:
-		from_date = add_days(getdate(), -30)
-	if not to_date:
-		to_date = getdate()
+    if not from_date:
+        from_date = add_days(getdate(), -30)
+    if not to_date:
+        to_date = getdate()
 
-	# Limit to 90 days for performance
-	if (getdate(to_date) - getdate(from_date)).days > 90:
-		from_date = add_days(getdate(to_date), -90)
+    # Limit to 90 days for performance
+    if (getdate(to_date) - getdate(from_date)).days > 90:
+        from_date = add_days(getdate(to_date), -90)
 
-	# Check cache
-	cache_key = f"parser_performance_dashboard_{from_date}_{to_date}"
-	cached_data = frappe.cache().get_value(cache_key)
-	if cached_data:
-		return cached_data
+    # Check cache
+    cache_key = f"parser_performance_dashboard_{from_date}_{to_date}"
+    cached_data = frappe.cache().get_value(cache_key)
+    if cached_data:
+        return cached_data
 
-	# Build conditions
-	conditions = "creation >= %(from_date)s AND creation <= %(to_date)s"
-	params = {"from_date": from_date, "to_date": to_date}
+    # Define DocType and custom functions
+    ParserLog = DocType("FLRTS Parser Log")
+    DATE = CustomFunction("DATE", ["date_field"])
+    ROUND = CustomFunction("ROUND", ["value", "decimals"])
+    NULLIF = CustomFunction("NULLIF", ["value1", "value2"])
 
-	if telegram_user_id:
-		conditions += " AND telegram_user_id = %(telegram_user_id)s"
-		params["telegram_user_id"] = telegram_user_id
+    try:
+        # Define CASE expressions for user_accepted status
+        accepted_case = Case().when(ParserLog.user_accepted == "Accepted", 1).else_(0)
+        rejected_case = Case().when(ParserLog.user_accepted == "Rejected", 1).else_(0)
+        pending_case = Case().when(ParserLog.user_accepted == "Pending", 1).else_(0)
 
-	if model_name:
-		conditions += " AND model_name = %(model_name)s"
-		params["model_name"] = model_name
+        # Calculate accepted and rejected sums for success rate
+        accepted_sum = Sum(accepted_case)
+        rejected_sum = Sum(rejected_case)
+        total_reviewed = accepted_sum + rejected_sum
 
-	try:
-		query = f"""
-			SELECT
-				DATE(creation) as date,
-				COUNT(*) as total_parses,
-				SUM(CASE WHEN user_accepted = 'Accepted' THEN 1 ELSE 0 END) as accepted,
-				SUM(CASE WHEN user_accepted = 'Rejected' THEN 1 ELSE 0 END) as rejected,
-				SUM(CASE WHEN user_accepted = 'Pending' THEN 1 ELSE 0 END) as pending,
-				CASE
-					WHEN (SUM(CASE WHEN user_accepted = 'Accepted' THEN 1 ELSE 0 END) + SUM(CASE WHEN user_accepted = 'Rejected' THEN 1 ELSE 0 END)) > 0
-					THEN ROUND((SUM(CASE WHEN user_accepted = 'Accepted' THEN 1 ELSE 0 END) * 100.0) / (SUM(CASE WHEN user_accepted = 'Accepted' THEN 1 ELSE 0 END) + SUM(CASE WHEN user_accepted = 'Rejected' THEN 1 ELSE 0 END)), 2)
-					ELSE 0
-				END as success_rate,
-				ROUND(AVG(confidence_score), 2) as avg_confidence,
-				ROUND(AVG(response_duration_ms)) as avg_response_ms,
-				ROUND(AVG(erpnext_response_ms)) as avg_erpnext_response_ms,
-				ROUND(SUM(estimated_cost_usd), 4) as total_cost,
-				ROUND(SUM(estimated_cost_usd) / NULLIF(COUNT(*), 0), 4) as avg_cost_per_parse
-			FROM `tabFLRTS Parser Log`
-			WHERE {conditions}
-			GROUP BY DATE(creation)
-			ORDER BY date DESC
-		"""
+        # Success rate calculation: avoid division by zero
+        success_rate = (
+            Case()
+            .when(total_reviewed > 0, ROUND((accepted_sum * 100.0) / total_reviewed, 2))
+            .else_(0)
+        )
 
-		data = frappe.db.sql(query, params, as_dict=True)
+        # Build query
+        query = (
+            frappe.qb.from_(ParserLog)
+            .select(
+                DATE(ParserLog.creation).as_("date"),
+                Count("*").as_("total_parses"),
+                accepted_sum.as_("accepted"),
+                rejected_sum.as_("rejected"),
+                Sum(pending_case).as_("pending"),
+                success_rate.as_("success_rate"),
+                ROUND(Avg(ParserLog.confidence_score), 2).as_("avg_confidence"),
+                ROUND(Avg(ParserLog.response_duration_ms), 0).as_("avg_response_ms"),
+                ROUND(Avg(ParserLog.erpnext_response_ms), 0).as_("avg_erpnext_response_ms"),
+                ROUND(Sum(ParserLog.estimated_cost_usd), 4).as_("total_cost"),
+                ROUND(Sum(ParserLog.estimated_cost_usd) / NULLIF(Count("*"), 0), 4).as_(
+                    "avg_cost_per_parse"
+                ),
+            )
+            .where(ParserLog.creation >= from_date)
+            .where(ParserLog.creation <= to_date)
+        )
 
-		# Cache for 5 minutes
-		frappe.cache().set_value(cache_key, data, expires_in_sec=300)
+        # Add optional filters
+        if telegram_user_id:
+            query = query.where(ParserLog.telegram_user_id == telegram_user_id)
 
-		return data
+        if model_name:
+            query = query.where(ParserLog.model_name == model_name)
 
-	except Exception as e:
-		frappe.log_error(f"Error in Parser Performance Dashboard: {str(e)}")
-		return []
+        # Group by and order
+        query = query.groupby(DATE(ParserLog.creation))
+        query = query.orderby(DATE(ParserLog.creation), order=frappe.qb.desc)
+
+        # Execute query
+        data = query.run(as_dict=True)
+
+        # Cache for 5 minutes
+        frappe.cache().set_value(cache_key, data, expires_in_sec=300)
+
+        return data
+
+    except Exception as e:
+        frappe.log_error(f"Error in Parser Performance Dashboard: {str(e)}")
+        return []
+
 
 def get_chart_data(data):
-	if not data:
-		return None
+    if not data:
+        return None
 
-	labels = [str(row.get('date')) for row in data]
-	success_rates = [row.get('success_rate', 0) for row in data]
+    labels = [str(row.get("date")) for row in data]
+    success_rates = [row.get("success_rate", 0) for row in data]
 
-	# Single-axis chart showing success rate only
-	# Cost data is available in the table columns
-	return {
-		"data": {
-			"labels": labels,
-			"datasets": [
-				{
-					"name": "Success Rate (%)",
-					"values": success_rates
-				}
-			]
-		},
-		"type": "line",
-		"colors": ["#28a745"],
-		"axisOptions": {
-			"xAxisMode": "tick",
-			"xIsSeries": True
-		},
-		"lineOptions": {
-			"regionFill": 1,
-			"hideDots": 0
-		}
-	}
+    # Single-axis chart showing success rate only
+    # Cost data is available in the table columns
+    return {
+        "data": {
+            "labels": labels,
+            "datasets": [{"name": "Success Rate (%)", "values": success_rates}],
+        },
+        "type": "line",
+        "colors": ["#28a745"],
+        "axisOptions": {"xAxisMode": "tick", "xIsSeries": True},
+        "lineOptions": {"regionFill": 1, "hideDots": 0},
+    }

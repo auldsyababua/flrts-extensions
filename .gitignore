@@ -9,3 +9,12 @@ dist/
 .pytest_cache/
 .env
 .venv
+env/
+venv/
+ENV/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+.hypothesis/
+.ruff_cache/

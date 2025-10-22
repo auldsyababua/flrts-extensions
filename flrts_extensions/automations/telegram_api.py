@@ -12,7 +12,7 @@ except ImportError:
     frappe = None
     Retry = None
 
-from flrts_extensions.utils.logging import log_debug, log_info, log_error
+from flrts_extensions.utils.logging import log_debug, log_error, log_info
 from flrts_extensions.utils.security import mask_secret
 
 
@@ -50,11 +50,16 @@ def handle_telegram_webhook():
         expected_token = frappe.conf.get("TELEGRAM_WEBHOOK_SECRET")
 
         if not expected_token:
-            log_error("TELEGRAM_WEBHOOK_SECRET not configured in site_config.json", title="Telegram Config Error")
+            log_error(
+                "TELEGRAM_WEBHOOK_SECRET not configured in site_config.json",
+                title="Telegram Config Error",
+            )
             frappe.throw("Telegram webhook not configured", frappe.PermissionError)
 
         if incoming_token != expected_token:
-            log_info(f"Unauthorized webhook attempt with token: {mask_secret(incoming_token or 'none')}")
+            log_info(
+                f"Unauthorized webhook attempt with token: {mask_secret(incoming_token or 'none')}"
+            )
             frappe.throw("Unauthorized", frappe.AuthenticationError)
 
         # 2. Parse payload
@@ -84,7 +89,7 @@ def handle_telegram_webhook():
             update=update,
             queue="short",
             retry=retry_config,
-            timeout=60
+            timeout=60,
         )
 
         log_info(f"Enqueued processing for Telegram update {update_id} from chat {chat_id}")
@@ -93,7 +98,7 @@ def handle_telegram_webhook():
         return {
             "ok": True,
             "acknowledged": True,
-            "processingTime": 0  # Sync time only (background job queued)
+            "processingTime": 0,  # Sync time only (background job queued)
         }
 
     except frappe.AuthenticationError:
@@ -105,8 +110,4 @@ def handle_telegram_webhook():
         log_error(f"Webhook handler error: {str(e)}", title="Telegram Webhook Error")
 
         # Return error response (but don't crash)
-        return {
-            "ok": False,
-            "acknowledged": False,
-            "error": "internal_error"
-        }
+        return {"ok": False, "acknowledged": False, "error": "internal_error"}

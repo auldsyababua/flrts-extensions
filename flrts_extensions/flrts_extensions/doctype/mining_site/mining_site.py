@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Mining Site DocType controller."""
 
-import frappe
 from frappe.model.document import Document
 
 

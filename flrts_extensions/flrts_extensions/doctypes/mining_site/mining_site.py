@@ -4,10 +4,12 @@
 
 from frappe.model.document import Document
 
+
 class MiningSite(Document):
     """
     Mining Site master DocType for tracking field locations.
 
     See docs/.scratch/10n-256/implementation-plan.md for schema details.
     """
+
     pass

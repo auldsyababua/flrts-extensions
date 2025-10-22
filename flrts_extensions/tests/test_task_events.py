@@ -3,7 +3,6 @@ Unit tests for Task DocType event handlers.
 
 STUB IMPLEMENTATION - Requires Frappe test framework (FrappeTestCase).
 """
-import pytest
 
 # STUB: Requires Frappe framework for testing
 # from frappe.tests.utils import FrappeTestCase
