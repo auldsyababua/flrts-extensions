@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import frappe
 from frappe import _
 from frappe.query_builder import DocType
-from frappe.query_builder.functions import Count, Sum, Avg
+from frappe.query_builder.functions import Avg, Count, Sum
 from pypika import CustomFunction
 from pypika.terms import Case
 

@@ -1,8 +1,8 @@
 import frappe
 from frappe import _
-from frappe.utils import add_days, getdate
 from frappe.query_builder import DocType
-from frappe.query_builder.functions import Count, Sum, Avg
+from frappe.query_builder.functions import Avg, Count, Sum
+from frappe.utils import add_days, getdate
 from pypika import CustomFunction
 from pypika.terms import Case
 
