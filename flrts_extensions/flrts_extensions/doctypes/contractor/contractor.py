@@ -4,10 +4,12 @@
 
 from frappe.model.document import Document
 
+
 class Contractor(Document):
     """
     Contractor master DocType for tracking maintenance service providers.
 
     See docs/.scratch/10n-256/implementation-plan.md for schema details.
     """
+
     pass

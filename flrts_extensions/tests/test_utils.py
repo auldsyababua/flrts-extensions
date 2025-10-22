@@ -3,7 +3,7 @@ Unit tests for utility functions (security, logging).
 
 Tests secret masking policy and logging guards.
 """
-import pytest
+
 from flrts_extensions.utils.security import mask_secret
 
 

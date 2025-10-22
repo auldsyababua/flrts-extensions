@@ -16,7 +16,7 @@ app_license = "MIT"
 doc_events = {
     "Task": {
         "validate": "flrts_extensions.automations.task_events.validate_task_dependencies",
-        "on_update": "flrts_extensions.automations.task_events.handle_task_update"
+        "on_update": "flrts_extensions.automations.task_events.handle_task_update",
     }
 }
 
@@ -42,10 +42,10 @@ fixtures = [
                     "Maintenance Visit-custom_parse_confidence",
                     "Maintenance Visit-custom_telegram_message_id",
                     "Maintenance Visit-custom_flrts_source",
-                    "Maintenance Visit-custom_flagged_for_review"
-                ]
+                    "Maintenance Visit-custom_flagged_for_review",
+                ],
             ]
-        ]
+        ],
     }
 ]
 

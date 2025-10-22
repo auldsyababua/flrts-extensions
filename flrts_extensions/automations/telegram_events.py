@@ -14,15 +14,18 @@ except ImportError:
     requests = None
     Retry = None
 
-from flrts_extensions.utils.logging import log_debug, log_info, log_error
+from flrts_extensions.utils.logging import log_debug, log_error, log_info
 from flrts_extensions.utils.security import mask_secret
-
 
 # Network errors that should trigger retry
 RETRYABLE_ERRORS = (
-    requests.exceptions.ConnectionError,  # ECONNREFUSED, ECONNRESET
-    requests.exceptions.Timeout,          # ETIMEDOUT
-) if requests else ()
+    (
+        requests.exceptions.ConnectionError,  # ECONNREFUSED, ECONNRESET
+        requests.exceptions.Timeout,  # ETIMEDOUT
+    )
+    if requests
+    else ()
+)
 
 
 def process_telegram_message(update):
@@ -85,18 +88,17 @@ def send_telegram_message_async(chat_id, text, retry_count=0):
         # Get bot token from config
         bot_token = frappe.conf.get("TELEGRAM_BOT_TOKEN")
         if not bot_token:
-            log_error("TELEGRAM_BOT_TOKEN not configured in site_config.json", title="Telegram Config Error")
+            log_error(
+                "TELEGRAM_BOT_TOKEN not configured in site_config.json",
+                title="Telegram Config Error",
+            )
             return {"success": False, "error": "bot_token_not_configured"}
 
         log_debug(f"Sending message to chat {chat_id} with bot token: {mask_secret(bot_token)}")
 
         # Send message via Telegram Bot API
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": "Markdown"
-        }
+        payload = {"chat_id": chat_id, "text": text, "parse_mode": "Markdown"}
 
         response = requests.post(url, json=payload, timeout=10)
 
@@ -138,7 +140,7 @@ def send_telegram_message_async(chat_id, text, retry_count=0):
         if 400 <= status_code < 500:
             log_error(
                 f"Client error {status_code} sending message to chat {chat_id}: {str(e)}",
-                title="Telegram Send Failed (4xx)"
+                title="Telegram Send Failed (4xx)",
             )
             return {"success": False, "error": "client_error", "status_code": status_code}
 
@@ -146,6 +148,6 @@ def send_telegram_message_async(chat_id, text, retry_count=0):
         # Unknown error - log and don't retry
         log_error(
             f"Unknown error sending Telegram message: {str(e)}",
-            title="Telegram Send Failed (Unknown)"
+            title="Telegram Send Failed (Unknown)",
         )
         return {"success": False, "error": "unknown"}

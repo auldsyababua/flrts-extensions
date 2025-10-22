@@ -3,8 +3,6 @@ Unit tests for Telegram event processing background jobs.
 
 Tests retry handling for network errors, rate limiting, and error classification.
 """
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 # STUB: Mock frappe for testing outside Frappe context
 # from flrts_extensions.automations.telegram_events import send_telegram_message_async
