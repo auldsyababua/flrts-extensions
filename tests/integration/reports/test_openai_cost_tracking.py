@@ -394,9 +394,7 @@ def test_openai_cost_tracking_summary_calculations(mock_frappe_for_cost_tracking
     assert summary["prompt_tokens"] == 5250  # 3000 + 1500 + 750
     assert summary["completion_tokens"] == 3500  # 2000 + 1000 + 500
     assert summary["total_cost"] == 4.375  # 2.5 + 1.25 + 0.625 (rounded to 4 decimals)
-    assert summary["avg_cost_per_request"] == round(
-        4.375 / 175, 6
-    )  # total_cost / total_requests
+    assert summary["avg_cost_per_request"] == round(4.375 / 175, 6)  # total_cost / total_requests
     assert summary["model_name"] == ""
     assert summary["budget_status"] == ""
 

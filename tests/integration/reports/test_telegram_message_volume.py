@@ -410,9 +410,7 @@ def test_telegram_volume_error_handling(mock_frappe_for_telegram_volume):
     }
 
     # Mock SQL error
-    mock_frappe_for_telegram_volume.db.sql.side_effect = Exception(
-        "Database connection error"
-    )
+    mock_frappe_for_telegram_volume.db.sql.side_effect = Exception("Database connection error")
 
     columns, data, message, chart = execute(filters)
 

@@ -375,9 +375,7 @@ def test_parser_dashboard_error_handling(mock_frappe_for_parser_dashboard):
     filters = {"from_date": "2025-01-01", "to_date": "2025-01-31"}
 
     # Mock SQL error
-    mock_frappe_for_parser_dashboard.db.sql.side_effect = Exception(
-        "Database connection error"
-    )
+    mock_frappe_for_parser_dashboard.db.sql.side_effect = Exception("Database connection error")
 
     columns, data, message, chart = execute(filters)
 
@@ -494,7 +492,10 @@ def test_parser_dashboard_avg_metrics(mock_frappe_for_parser_dashboard):
     assert "AVG(confidence_score)" in query
     assert "AVG(response_duration_ms)" in query
     assert "AVG(erpnext_response_ms)" in query
-    assert "AVG(estimated_cost_usd)" in query or "SUM(estimated_cost_usd) / NULLIF(COUNT(*), 0)" in query
+    assert (
+        "AVG(estimated_cost_usd)" in query
+        or "SUM(estimated_cost_usd) / NULLIF(COUNT(*), 0)" in query
+    )
 
     # Verify average metrics in data
     assert data[0]["avg_confidence"] == Decimal("0.87")

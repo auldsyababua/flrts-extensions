@@ -103,9 +103,11 @@ def get_data(filters):
         total_reviewed = accepted_sum + rejected_sum
 
         # Success rate calculation: avoid division by zero
-        success_rate = Case().when(
-            total_reviewed > 0, ROUND((accepted_sum * 100.0) / total_reviewed, 2)
-        ).else_(0)
+        success_rate = (
+            Case()
+            .when(total_reviewed > 0, ROUND((accepted_sum * 100.0) / total_reviewed, 2))
+            .else_(0)
+        )
 
         # Build query
         query = (
