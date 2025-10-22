@@ -2,6 +2,10 @@ from datetime import datetime, timedelta
 
 import frappe
 from frappe import _
+from frappe.query_builder import DocType
+from frappe.query_builder.functions import Count, Sum, Avg
+from pypika import CustomFunction
+from pypika.terms import Case
 
 
 def execute(filters=None):
@@ -110,43 +114,66 @@ def get_data(filters):
     if cached_data:
         return cached_data
 
-    conditions = "creation >= %(from_date)s AND creation <= %(to_date)s"
-    params = {"from_date": from_date, "to_date": to_date}
+    # Define DocType and custom functions
+    ParserLog = DocType("FLRTS Parser Log")
+    DATE = CustomFunction("DATE", ["date_field"])
+    HOUR = CustomFunction("HOUR", ["date_field"])
+    ROUND = CustomFunction("ROUND", ["value", "decimals"])
+    COUNT_DISTINCT = CustomFunction("COUNT", ["DISTINCT", "field"])
 
-    if telegram_user_id:
-        conditions += " AND telegram_user_id = %(telegram_user_id)s"
-        params["telegram_user_id"] = telegram_user_id
-
-    if group_by == "Date":
-        query = f"""
-        SELECT
-            DATE(creation) as date,
-            COUNT(*) as total_messages,
-            COUNT(DISTINCT telegram_user_id) as unique_users,
-            COUNT(created_task_id) as tasks_created,
-            SUM(CASE WHEN error_occurred = 1 THEN 1 ELSE 0 END) as errors,
-            ROUND(AVG(confidence_score), 2) as avg_confidence
-        FROM `tabFLRTS Parser Log`
-        WHERE {conditions}
-        GROUP BY DATE(creation)
-        ORDER BY date DESC
-        """
-    else:
-        query = f"""
-        SELECT
-            HOUR(creation) as hour,
-            COUNT(*) as total_messages,
-            COUNT(DISTINCT telegram_user_id) as unique_users,
-            COUNT(created_task_id) as tasks_created,
-            SUM(CASE WHEN error_occurred = 1 THEN 1 ELSE 0 END) as errors
-        FROM `tabFLRTS Parser Log`
-        WHERE {conditions}
-        GROUP BY HOUR(creation)
-        ORDER BY hour
-        """
+    # Define CASE expression for errors
+    error_case = Case().when(ParserLog.error_occurred == 1, 1).else_(0)
 
     try:
-        data = frappe.db.sql(query, params, as_dict=True)
+        if group_by == "Date":
+            # Query 1: Group by Date
+            query = (
+                frappe.qb.from_(ParserLog)
+                .select(
+                    DATE(ParserLog.creation).as_("date"),
+                    Count("*").as_("total_messages"),
+                    COUNT_DISTINCT("DISTINCT", ParserLog.telegram_user_id).as_("unique_users"),
+                    Count(ParserLog.created_task_id).as_("tasks_created"),
+                    Sum(error_case).as_("errors"),
+                    ROUND(Avg(ParserLog.confidence_score), 2).as_("avg_confidence"),
+                )
+                .where(ParserLog.creation >= from_date)
+                .where(ParserLog.creation <= to_date)
+            )
+
+            # Add optional user filter
+            if telegram_user_id:
+                query = query.where(ParserLog.telegram_user_id == telegram_user_id)
+
+            # Group by and order
+            query = query.groupby(DATE(ParserLog.creation))
+            query = query.orderby(DATE(ParserLog.creation), order=frappe.qb.desc)
+
+        else:
+            # Query 2: Group by Hour
+            query = (
+                frappe.qb.from_(ParserLog)
+                .select(
+                    HOUR(ParserLog.creation).as_("hour"),
+                    Count("*").as_("total_messages"),
+                    COUNT_DISTINCT("DISTINCT", ParserLog.telegram_user_id).as_("unique_users"),
+                    Count(ParserLog.created_task_id).as_("tasks_created"),
+                    Sum(error_case).as_("errors"),
+                )
+                .where(ParserLog.creation >= from_date)
+                .where(ParserLog.creation <= to_date)
+            )
+
+            # Add optional user filter
+            if telegram_user_id:
+                query = query.where(ParserLog.telegram_user_id == telegram_user_id)
+
+            # Group by and order
+            query = query.groupby(HOUR(ParserLog.creation))
+            query = query.orderby(HOUR(ParserLog.creation))
+
+        # Execute query
+        data = query.run(as_dict=True)
         frappe.cache().set(cache_key, data, expires_in_sec=600)
         return data
     except Exception as e:
