@@ -1,6 +1,9 @@
 import frappe
 from frappe import _
 from frappe.utils import get_last_day, getdate
+from frappe.query_builder import DocType
+from frappe.query_builder.functions import Count, Sum
+from pypika import CustomFunction
 
 
 def execute(filters=None):
@@ -86,41 +89,46 @@ def get_data(filters):
     if not to_date:
         to_date = getdate()
 
-    conditions = "WHERE creation >= %(from_date)s AND creation <= %(to_date)s"
-    params = {"from_date": from_date, "to_date": to_date}
+    # Define DocType and custom functions
+    ParserLog = DocType("FLRTS Parser Log")
+    DATE = CustomFunction("DATE", ["date_field"])
+    ROUND = CustomFunction("ROUND", ["value", "decimals"])
 
+    # Build base query
+    query = (
+        frappe.qb.from_(ParserLog)
+        .select(
+            DATE(ParserLog.creation).as_("date"),
+            Count("*").as_("total_requests"),
+            Sum(ParserLog.total_tokens).as_("total_tokens"),
+            Sum(ParserLog.prompt_tokens).as_("prompt_tokens"),
+            Sum(ParserLog.completion_tokens).as_("completion_tokens"),
+            ROUND(Sum(ParserLog.estimated_cost_usd), 4).as_("total_cost"),
+            ROUND(Sum(ParserLog.estimated_cost_usd) / Count("*"), 6).as_("avg_cost_per_request"),
+            ParserLog.model_name,
+        )
+        .where(ParserLog.creation >= from_date)
+        .where(ParserLog.creation <= to_date)
+    )
+
+    # Add optional model filter
     if model_name:
-        conditions += " AND model_name = %(model_name)s"
-        params["model_name"] = model_name
+        query = query.where(ParserLog.model_name == model_name)
 
     # Group by logic based on filter
     if group_by == "Model Name":
-        sql_group_by = "model_name"
+        query = query.groupby(ParserLog.model_name)
     else:
-        sql_group_by = "DATE(creation)"
         if model_name:
-            sql_group_by += ", model_name"
+            query = query.groupby(DATE(ParserLog.creation), ParserLog.model_name)
+        else:
+            query = query.groupby(DATE(ParserLog.creation))
 
-    query = f"""
-		SELECT
-			DATE(creation) as date,
-			COUNT(*) as total_requests,
-			SUM(total_tokens) as total_tokens,
-			SUM(prompt_tokens) as prompt_tokens,
-			SUM(completion_tokens) as completion_tokens,
-			ROUND(SUM(estimated_cost_usd), 4) as total_cost,
-			ROUND(SUM(estimated_cost_usd) / COUNT(*), 6) as avg_cost_per_request,
-			model_name
-		FROM `tabFLRTS Parser Log`
-		{conditions}
-		GROUP BY {sql_group_by}
-		ORDER BY date DESC
-	"""
+    # Order by date descending
+    query = query.orderby(DATE(ParserLog.creation), order=frappe.qb.desc)
 
-    if model_name:
-        query += ", model_name"
-
-    data = frappe.db.sql(query, params, as_dict=True)
+    # Execute query
+    data = query.run(as_dict=True)
 
     # Calculate projected monthly cost
     current_day = getdate().day
