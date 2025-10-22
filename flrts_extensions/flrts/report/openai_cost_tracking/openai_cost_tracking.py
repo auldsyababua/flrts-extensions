@@ -94,48 +94,55 @@ def get_data(filters):
     DATE = CustomFunction("DATE", ["date_field"])
     ROUND = CustomFunction("ROUND", ["value", "decimals"])
 
-    # Build base query
-    # Use aggregated date when grouping by model to satisfy ONLY_FULL_GROUP_BY
-    date_expr = (
-        Min(DATE(ParserLog.creation)).as_("date")
-        if group_by == "Model Name"
-        else DATE(ParserLog.creation).as_("date")
-    )
+    # Build query based on grouping mode
+    DATE_EXPR = DATE(ParserLog.creation)
+    DATE_MIN = Min(DATE_EXPR)
 
-    query = (
+    base = (
         frappe.qb.from_(ParserLog)
-        .select(
-            date_expr,
-            Count("*").as_("total_requests"),
-            Sum(ParserLog.total_tokens).as_("total_tokens"),
-            Sum(ParserLog.prompt_tokens).as_("prompt_tokens"),
-            Sum(ParserLog.completion_tokens).as_("completion_tokens"),
-            ROUND(Sum(ParserLog.estimated_cost_usd), 4).as_("total_cost"),
-            ROUND(Sum(ParserLog.estimated_cost_usd) / Count("*"), 6).as_("avg_cost_per_request"),
-            ParserLog.model_name,
-        )
         .where(ParserLog.creation >= from_date)
         .where(ParserLog.creation <= to_date)
     )
 
-    # Add optional model filter
     if model_name:
-        query = query.where(ParserLog.model_name == model_name)
+        base = base.where(ParserLog.model_name == model_name)
 
-    # Group by logic based on filter
     if group_by == "Model Name":
-        query = query.groupby(ParserLog.model_name)
+        # When grouping by model, aggregate the date
+        query = (
+            base.select(
+                DATE_MIN.as_("date"),
+                Count("*").as_("total_requests"),
+                Sum(ParserLog.total_tokens).as_("total_tokens"),
+                Sum(ParserLog.prompt_tokens).as_("prompt_tokens"),
+                Sum(ParserLog.completion_tokens).as_("completion_tokens"),
+                ROUND(Sum(ParserLog.estimated_cost_usd), 4).as_("total_cost"),
+                ROUND(Sum(ParserLog.estimated_cost_usd) / Count("*"), 6).as_(
+                    "avg_cost_per_request"
+                ),
+                ParserLog.model_name,
+            )
+            .groupby(ParserLog.model_name)
+            .orderby(DATE_MIN, order=frappe.qb.desc)
+        )
     else:
-        if model_name:
-            query = query.groupby(DATE(ParserLog.creation), ParserLog.model_name)
-        else:
-            query = query.groupby(DATE(ParserLog.creation))
-
-    # Order by
-    if group_by == "Model Name":
-        query = query.orderby(ParserLog.model_name)
-    else:
-        query = query.orderby(DATE(ParserLog.creation), order=frappe.qb.desc)
+        # When grouping by date
+        query = (
+            base.select(
+                DATE_EXPR.as_("date"),
+                Count("*").as_("total_requests"),
+                Sum(ParserLog.total_tokens).as_("total_tokens"),
+                Sum(ParserLog.prompt_tokens).as_("prompt_tokens"),
+                Sum(ParserLog.completion_tokens).as_("completion_tokens"),
+                ROUND(Sum(ParserLog.estimated_cost_usd), 4).as_("total_cost"),
+                ROUND(Sum(ParserLog.estimated_cost_usd) / Count("*"), 6).as_(
+                    "avg_cost_per_request"
+                ),
+                ParserLog.model_name,
+            )
+            .groupby(DATE_EXPR if not model_name else (DATE_EXPR, ParserLog.model_name))
+            .orderby(DATE_EXPR, order=frappe.qb.desc)
+        )
 
     # Execute query
     data = query.run(as_dict=True)

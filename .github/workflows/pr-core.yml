@@ -10,6 +10,9 @@ jobs:
   lint-and-test:
     name: Lint and Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
@@ -23,6 +26,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
+          cache-dependency-path: requirements-dev.txt
 
       - name: Install dependencies
         run: |
@@ -30,7 +34,7 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run Ruff linter
-        run: ruff check .
+        run: ruff check --output-format=github .
 
       - name: Run Ruff formatter check
         run: ruff format --check .

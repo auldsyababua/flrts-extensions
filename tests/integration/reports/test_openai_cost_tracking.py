@@ -24,29 +24,99 @@ import pytest
 
 @pytest.fixture
 def mock_frappe_for_cost_tracking():
-    """Mock frappe module for OpenAI Cost Tracking tests.
+    """Mock frappe module for OpenAI Cost Tracking tests with Query Builder support."""
+    import types
 
-    Provides proper mocking of frappe.db.sql, frappe.utils functions,
-    and frappe translation (_).
-    """
     frappe_mock = MagicMock()
 
-    # Mock translation function
-    frappe_mock._.side_effect = lambda x: x
+    # Mock common frappe methods
+    frappe_mock._ = lambda x: x
+    frappe_mock.throw = MagicMock(side_effect=Exception)
+    frappe_mock.log_error = MagicMock()
 
-    # Mock getdate() to return consistent date
-    frappe_mock.utils.getdate.return_value = date(2025, 1, 15)
+    # Mock utils
+    frappe_mock.utils = MagicMock()
+    frappe_mock.utils.get_last_day = MagicMock(return_value=date(2025, 1, 31))
+    frappe_mock.utils.getdate = MagicMock(return_value=date(2025, 1, 15))
 
-    # Mock get_last_day() to return last day of January
-    frappe_mock.utils.get_last_day.return_value = date(2025, 1, 31)
+    # Mock cache
+    cache_mock = MagicMock()
+    cache_mock.get = MagicMock(return_value=None)
+    cache_mock.get_value = MagicMock(return_value=None)
+    cache_mock.set = MagicMock()
+    cache_mock.set_value = MagicMock()
+    frappe_mock.cache = MagicMock(return_value=cache_mock)
 
+    # Mock database
+    frappe_mock.db = MagicMock()
+    frappe_mock.db.sql = MagicMock(return_value=[])
+
+    # Preserve any pre-existing modules
+    prev = {
+        m: sys.modules[m]
+        for m in (
+            "frappe",
+            "frappe.utils",
+            "frappe.query_builder",
+            "frappe.query_builder.functions",
+            "pypika",
+            "pypika.terms",
+        )
+        if m in sys.modules
+    }
+
+    # Ensure the report module is freshly imported
+    for m in list(sys.modules):
+        if m.startswith("flrts_extensions.flrts.report.openai_cost_tracking"):
+            del sys.modules[m]
+
+    # Register frappe + utils
     sys.modules["frappe"] = frappe_mock
     sys.modules["frappe.utils"] = frappe_mock.utils
 
+    # Stub minimal Query Builder
+    query = MagicMock()
+    query.select.return_value = query
+    query.where.return_value = query
+    query.groupby.return_value = query
+    query.orderby.return_value = query
+    # Make qb.run() return whatever db.sql would have returned
+    query.run.side_effect = lambda as_dict=True: frappe_mock.db.sql.return_value
+
+    qb = MagicMock()
+    qb.from_.return_value = query
+    qb.desc = "DESC"
+    frappe_mock.qb = qb
+
+    sys.modules["frappe.query_builder"] = types.SimpleNamespace(DocType=MagicMock())
+    sys.modules["frappe.query_builder.functions"] = types.SimpleNamespace(
+        Count=MagicMock(), Sum=MagicMock(), Avg=MagicMock(), Min=MagicMock()
+    )
+    sys.modules["pypika"] = types.SimpleNamespace(
+        CustomFunction=lambda *_args, **_kwargs: MagicMock()
+    )
+    sys.modules["pypika.terms"] = types.SimpleNamespace(Case=MagicMock, Distinct=MagicMock())
+
     yield frappe_mock
 
-    del sys.modules["frappe"]
-    del sys.modules["frappe.utils"]
+    # Restore/cleanup modules
+    for m in (
+        "frappe",
+        "frappe.utils",
+        "frappe.query_builder",
+        "frappe.query_builder.functions",
+        "pypika",
+        "pypika.terms",
+    ):
+        if m in prev:
+            sys.modules[m] = prev[m]
+        elif m in sys.modules:
+            del sys.modules[m]
+
+    # Drop report modules to avoid leaking state
+    for m in list(sys.modules):
+        if m.startswith("flrts_extensions.flrts.report.openai_cost_tracking"):
+            del sys.modules[m]
 
 
 @pytest.mark.integration

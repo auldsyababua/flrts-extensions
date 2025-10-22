@@ -26,35 +26,98 @@ import pytest
 
 @pytest.fixture
 def mock_frappe_for_telegram_volume():
-    """Mock frappe module for Telegram Message Volume tests.
+    """Mock frappe module for Telegram Message Volume tests with Query Builder support."""
+    import types
 
-    Provides proper mocking of frappe.db.sql, frappe.cache,
-    frappe.throw, and error logging.
-    """
     frappe_mock = MagicMock()
 
-    # Mock translation function
-    frappe_mock._.side_effect = lambda x: x
+    # Mock common frappe methods
+    frappe_mock._ = lambda x: x
 
     # Mock frappe.throw for validation errors
     def mock_throw(message):
         raise Exception(message)
 
     frappe_mock.throw = mock_throw
+    frappe_mock.log_error = MagicMock()
 
     # Mock cache
     cache_mock = MagicMock()
-    cache_mock.get.return_value = None  # No cache hit by default
-    frappe_mock.cache.return_value = cache_mock
+    cache_mock.get = MagicMock(return_value=None)
+    cache_mock.get_value = MagicMock(return_value=None)
+    cache_mock.set = MagicMock()
+    cache_mock.set_value = MagicMock()
+    frappe_mock.cache = MagicMock(return_value=cache_mock)
 
-    # Mock log_error
-    frappe_mock.log_error = MagicMock()
+    # Mock database
+    frappe_mock.db = MagicMock()
+    frappe_mock.db.sql = MagicMock(return_value=[])
 
+    # Preserve any pre-existing modules
+    prev = {
+        m: sys.modules[m]
+        for m in (
+            "frappe",
+            "frappe.utils",
+            "frappe.query_builder",
+            "frappe.query_builder.functions",
+            "pypika",
+            "pypika.terms",
+        )
+        if m in sys.modules
+    }
+
+    # Ensure the report module is freshly imported
+    for m in list(sys.modules):
+        if m.startswith("flrts_extensions.flrts.report.telegram_message_volume"):
+            del sys.modules[m]
+
+    # Register frappe
     sys.modules["frappe"] = frappe_mock
+
+    # Stub minimal Query Builder
+    query = MagicMock()
+    query.select.return_value = query
+    query.where.return_value = query
+    query.groupby.return_value = query
+    query.orderby.return_value = query
+    # Make qb.run() return whatever db.sql would have returned
+    query.run.side_effect = lambda as_dict=True: frappe_mock.db.sql.return_value
+
+    qb = MagicMock()
+    qb.from_.return_value = query
+    qb.desc = "DESC"
+    frappe_mock.qb = qb
+
+    sys.modules["frappe.query_builder"] = types.SimpleNamespace(DocType=MagicMock())
+    sys.modules["frappe.query_builder.functions"] = types.SimpleNamespace(
+        Count=MagicMock(), Sum=MagicMock(), Avg=MagicMock(), Min=MagicMock()
+    )
+    sys.modules["pypika"] = types.SimpleNamespace(
+        CustomFunction=lambda *_args, **_kwargs: MagicMock()
+    )
+    sys.modules["pypika.terms"] = types.SimpleNamespace(Case=MagicMock, Distinct=MagicMock())
 
     yield frappe_mock
 
-    del sys.modules["frappe"]
+    # Restore/cleanup modules
+    for m in (
+        "frappe",
+        "frappe.utils",
+        "frappe.query_builder",
+        "frappe.query_builder.functions",
+        "pypika",
+        "pypika.terms",
+    ):
+        if m in prev:
+            sys.modules[m] = prev[m]
+        elif m in sys.modules:
+            del sys.modules[m]
+
+    # Drop report modules to avoid leaking state
+    for m in list(sys.modules):
+        if m.startswith("flrts_extensions.flrts.report.telegram_message_volume"):
+            del sys.modules[m]
 
 
 @pytest.mark.integration
