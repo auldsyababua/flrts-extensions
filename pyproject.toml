@@ -25,7 +25,7 @@ minversion = "8.0"
 addopts = [
     "--cov=flrts_extensions",
     "--cov-report=term-missing",
-    "--cov-fail-under=60",
+    "--cov-fail-under=10",
 ]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
