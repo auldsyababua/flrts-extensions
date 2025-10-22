@@ -1,0 +1,10 @@
+{
+    "name": "Telegram Message Volume",
+    "doctype": "Report",
+    "module": "FLRTS",
+    "report_name": "Telegram Message Volume",
+    "report_type": "Script Report",
+    "ref_doctype": "FLRTS Parser Log",
+    "is_standard": "Yes",
+    "disabled": 0
+}

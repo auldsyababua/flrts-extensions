@@ -1,0 +1,97 @@
+{
+  "name": "FLRTS User Preference",
+  "doctype": "DocType",
+  "module": "FLRTS",
+  "is_submittable": 0,
+  "is_tree": 0,
+  "track_changes": 1,
+  "autoname": "field:user",
+  "title_field": "user",
+  "fields": [
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "options": "User",
+      "label": "User",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "telegram_user_id",
+      "fieldtype": "Data",
+      "label": "Telegram User ID",
+      "unique": 1
+    },
+    {
+      "fieldname": "telegram_username",
+      "fieldtype": "Data",
+      "label": "Telegram Username"
+    },
+    {
+      "fieldname": "timezone",
+      "fieldtype": "Select",
+      "label": "Timezone",
+      "options": "America/New_York\nAmerica/Chicago\nAmerica/Los_Angeles\nAmerica/Denver",
+      "reqd": 1,
+      "default": "America/Los_Angeles"
+    },
+    {
+      "fieldname": "default_priority",
+      "fieldtype": "Select",
+      "label": "Default Priority",
+      "options": "Low\nMedium\nHigh\nUrgent",
+      "default": "Medium"
+    },
+    {
+      "fieldname": "default_site",
+      "fieldtype": "Link",
+      "options": "Location",
+      "label": "Default Site"
+    },
+    {
+      "fieldname": "default_customer",
+      "fieldtype": "Link",
+      "options": "Customer",
+      "label": "Default Customer"
+    },
+    {
+      "fieldname": "enable_telegram_notifications",
+      "fieldtype": "Check",
+      "label": "Enable Telegram Notifications",
+      "default": 1
+    },
+    {
+      "fieldname": "enable_email_notifications",
+      "fieldtype": "Check",
+      "label": "Enable Email Notifications",
+      "default": 0
+    },
+    {
+      "fieldname": "notification_quiet_hours_start",
+      "fieldtype": "Time",
+      "label": "Notification Quiet Hours Start"
+    },
+    {
+      "fieldname": "notification_quiet_hours_end",
+      "fieldtype": "Time",
+      "label": "Notification Quiet Hours End"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "FLRTS User",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1,
+      "user_permission_doctypes": ["User"]
+    }
+  ]
+}
