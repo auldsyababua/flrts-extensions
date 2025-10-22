@@ -10,7 +10,10 @@
     "unique": 1,
     "read_only": 1,
     "in_list_view": 0,
-    "description": "Original Supabase task UUID (for future reconciliation and audit)"
+    "description": "Original Supabase task UUID (for future reconciliation and audit)",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-flrts_owner",
@@ -22,7 +25,10 @@
     "insert_after": "supabase_task_id",
     "reqd": 0,
     "in_list_view": 1,
-    "description": "Internal task owner (FLRTS personnel who owns this task)"
+    "description": "Internal task owner (FLRTS personnel who owns this task)",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-flrts_priority",
@@ -35,7 +41,10 @@
     "default": "3",
     "reqd": 0,
     "in_list_view": 1,
-    "description": "Task priority (1=Urgent, 2=High, 3=Normal, 4=Low, 5=Lowest)"
+    "description": "Task priority (1=Urgent, 2=High, 3=Normal, 4=Low, 5=Lowest)",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-flrts_site",
@@ -47,7 +56,10 @@
     "insert_after": "flrts_priority",
     "reqd": 0,
     "in_list_view": 1,
-    "description": "Mining site where maintenance was performed"
+    "description": "Mining site where maintenance was performed",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-flrts_contractor",
@@ -59,7 +71,10 @@
     "insert_after": "flrts_site",
     "reqd": 0,
     "in_list_view": 1,
-    "description": "Contractor responsible for maintenance work"
+    "description": "Contractor responsible for maintenance work",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-flrts_metadata",
@@ -71,7 +86,10 @@
     "default": "{}",
     "reqd": 0,
     "in_list_view": 0,
-    "description": "Custom metadata in JSON format (for integrations and extensions)"
+    "description": "Custom metadata in JSON format (for integrations and extensions)",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-custom_synced_at",
@@ -83,7 +101,10 @@
     "reqd": 0,
     "read_only": 1,
     "in_list_view": 0,
-    "description": "Timestamp of last sync from Supabase (migration artifact)"
+    "description": "Timestamp of last sync from Supabase (migration artifact)",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-custom_assigned_to",
@@ -95,7 +116,10 @@
     "insert_after": "custom_synced_at",
     "reqd": 0,
     "in_list_view": 1,
-    "description": "User assigned to this maintenance visit"
+    "description": "User assigned to this maintenance visit",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-custom_flrts_priority",
@@ -108,7 +132,10 @@
     "default": "Medium",
     "reqd": 0,
     "in_list_view": 1,
-    "description": "Priority level for FLRTS tasks (Low/Medium/High/Urgent)"
+    "description": "Priority level for FLRTS tasks (Low/Medium/High/Urgent)",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-custom_parse_rationale",
@@ -119,7 +146,10 @@
     "insert_after": "custom_flrts_priority",
     "reqd": 0,
     "in_list_view": 0,
-    "description": "AI parser's reasoning for field assignments"
+    "description": "AI parser's reasoning for field assignments",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-custom_parse_confidence",
@@ -131,7 +161,10 @@
     "precision": 2,
     "reqd": 0,
     "in_list_view": 0,
-    "description": "Confidence score from AI parser (0.0-1.0)"
+    "description": "Confidence score from AI parser (0.0-1.0)",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-custom_telegram_message_id",
@@ -142,7 +175,10 @@
     "insert_after": "custom_parse_confidence",
     "reqd": 0,
     "in_list_view": 0,
-    "description": "Original Telegram message ID that created this task"
+    "description": "Original Telegram message ID that created this task",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-custom_flrts_source",
@@ -154,7 +190,10 @@
     "default": "telegram_bot",
     "reqd": 0,
     "in_list_view": 0,
-    "description": "Source system that created this task"
+    "description": "Source system that created this task",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   },
   {
     "name": "Maintenance Visit-custom_flagged_for_review",
@@ -166,6 +205,9 @@
     "default": 0,
     "reqd": 0,
     "in_list_view": 1,
-    "description": "Flag tasks that need manual review"
+    "description": "Flag tasks that need manual review",
+    "doctype": "Custom Field",
+    "docstatus": 0,
+    "module": "FLRTS Extensions"
   }
 ]
