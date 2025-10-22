@@ -12,15 +12,25 @@ def execute(doc, method):
     if prompt_tokens == 0 and completion_tokens == 0:
         return
 
-    # Define pricing per model (per token)
+    # Define pricing per model (per 1M tokens, updated rates)
     pricing = {
-        "gpt-4o-2024-08-06": {"input": 0.0000025, "output": 0.000010},
-        "gpt-4o-mini": {"input": 0.00000015, "output": 0.0000006},
-        "gpt-4o": {"input": 0.0000025, "output": 0.000010},  # Fallback for generic name
+        "gpt-4o-2024-08-06": {"input": 0.00000375, "output": 0.000015},
+        "gpt-4o-mini": {"input": 0.0000006, "output": 0.0000024},
+        "gpt-4o": {"input": 0.00000375, "output": 0.000015},  # Fallback for generic name
     }
 
-    # Get pricing for model (default to gpt-4o if unknown)
-    model_pricing = pricing.get(doc.model_name, pricing["gpt-4o"])
+    # Normalize model name for lookup (strip whitespace, lowercase)
+    model_key = doc.model_name.strip().lower() if doc.model_name else ""
+
+    # Get pricing for model with fallback warning
+    if model_key in pricing:
+        model_pricing = pricing[model_key]
+    else:
+        model_pricing = pricing["gpt-4o"]
+        frappe.logger().warning(
+            f"Unknown model '{doc.model_name}' in cost calculation for {doc.name}, "
+            f"falling back to gpt-4o pricing"
+        )
 
     # Calculate cost
     input_cost = prompt_tokens * model_pricing["input"]
