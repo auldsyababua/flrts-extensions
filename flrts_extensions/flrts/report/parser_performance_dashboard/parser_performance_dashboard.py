@@ -1,6 +1,10 @@
 import frappe
 from frappe import _
 from frappe.utils import add_days, getdate
+from frappe.query_builder import DocType
+from frappe.query_builder.functions import Count, Sum, Avg
+from pypika import CustomFunction
+from pypika.terms import Case
 
 
 def execute(filters=None):
@@ -81,43 +85,63 @@ def get_data(filters):
     if cached_data:
         return cached_data
 
-    # Build conditions
-    conditions = "creation >= %(from_date)s AND creation <= %(to_date)s"
-    params = {"from_date": from_date, "to_date": to_date}
-
-    if telegram_user_id:
-        conditions += " AND telegram_user_id = %(telegram_user_id)s"
-        params["telegram_user_id"] = telegram_user_id
-
-    if model_name:
-        conditions += " AND model_name = %(model_name)s"
-        params["model_name"] = model_name
+    # Define DocType and custom functions
+    ParserLog = DocType("FLRTS Parser Log")
+    DATE = CustomFunction("DATE", ["date_field"])
+    ROUND = CustomFunction("ROUND", ["value", "decimals"])
+    NULLIF = CustomFunction("NULLIF", ["value1", "value2"])
 
     try:
-        query = f"""
-			SELECT
-				DATE(creation) as date,
-				COUNT(*) as total_parses,
-				SUM(CASE WHEN user_accepted = 'Accepted' THEN 1 ELSE 0 END) as accepted,
-				SUM(CASE WHEN user_accepted = 'Rejected' THEN 1 ELSE 0 END) as rejected,
-				SUM(CASE WHEN user_accepted = 'Pending' THEN 1 ELSE 0 END) as pending,
-				CASE
-					WHEN (SUM(CASE WHEN user_accepted = 'Accepted' THEN 1 ELSE 0 END) + SUM(CASE WHEN user_accepted = 'Rejected' THEN 1 ELSE 0 END)) > 0
-					THEN ROUND((SUM(CASE WHEN user_accepted = 'Accepted' THEN 1 ELSE 0 END) * 100.0) / (SUM(CASE WHEN user_accepted = 'Accepted' THEN 1 ELSE 0 END) + SUM(CASE WHEN user_accepted = 'Rejected' THEN 1 ELSE 0 END)), 2)
-					ELSE 0
-				END as success_rate,
-				ROUND(AVG(confidence_score), 2) as avg_confidence,
-				ROUND(AVG(response_duration_ms)) as avg_response_ms,
-				ROUND(AVG(erpnext_response_ms)) as avg_erpnext_response_ms,
-				ROUND(SUM(estimated_cost_usd), 4) as total_cost,
-				ROUND(SUM(estimated_cost_usd) / NULLIF(COUNT(*), 0), 4) as avg_cost_per_parse
-			FROM `tabFLRTS Parser Log`
-			WHERE {conditions}
-			GROUP BY DATE(creation)
-			ORDER BY date DESC
-		"""
+        # Define CASE expressions for user_accepted status
+        accepted_case = Case().when(ParserLog.user_accepted == "Accepted", 1).else_(0)
+        rejected_case = Case().when(ParserLog.user_accepted == "Rejected", 1).else_(0)
+        pending_case = Case().when(ParserLog.user_accepted == "Pending", 1).else_(0)
 
-        data = frappe.db.sql(query, params, as_dict=True)
+        # Calculate accepted and rejected sums for success rate
+        accepted_sum = Sum(accepted_case)
+        rejected_sum = Sum(rejected_case)
+        total_reviewed = accepted_sum + rejected_sum
+
+        # Success rate calculation: avoid division by zero
+        success_rate = Case().when(
+            total_reviewed > 0, ROUND((accepted_sum * 100.0) / total_reviewed, 2)
+        ).else_(0)
+
+        # Build query
+        query = (
+            frappe.qb.from_(ParserLog)
+            .select(
+                DATE(ParserLog.creation).as_("date"),
+                Count("*").as_("total_parses"),
+                accepted_sum.as_("accepted"),
+                rejected_sum.as_("rejected"),
+                Sum(pending_case).as_("pending"),
+                success_rate.as_("success_rate"),
+                ROUND(Avg(ParserLog.confidence_score), 2).as_("avg_confidence"),
+                ROUND(Avg(ParserLog.response_duration_ms), 0).as_("avg_response_ms"),
+                ROUND(Avg(ParserLog.erpnext_response_ms), 0).as_("avg_erpnext_response_ms"),
+                ROUND(Sum(ParserLog.estimated_cost_usd), 4).as_("total_cost"),
+                ROUND(Sum(ParserLog.estimated_cost_usd) / NULLIF(Count("*"), 0), 4).as_(
+                    "avg_cost_per_parse"
+                ),
+            )
+            .where(ParserLog.creation >= from_date)
+            .where(ParserLog.creation <= to_date)
+        )
+
+        # Add optional filters
+        if telegram_user_id:
+            query = query.where(ParserLog.telegram_user_id == telegram_user_id)
+
+        if model_name:
+            query = query.where(ParserLog.model_name == model_name)
+
+        # Group by and order
+        query = query.groupby(DATE(ParserLog.creation))
+        query = query.orderby(DATE(ParserLog.creation), order=frappe.qb.desc)
+
+        # Execute query
+        data = query.run(as_dict=True)
 
         # Cache for 5 minutes
         frappe.cache().set_value(cache_key, data, expires_in_sec=300)
